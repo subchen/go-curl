@@ -7,18 +7,17 @@ import (
 	"golang.org/x/net/publicsuffix"
 )
 
-func (r *Request) applyCookies() {
+func (r *Request) applyCookies(req *http.Request) {
 	if r.Cookies == nil {
 		return
 	}
 
 	jar := cookieJar(r.Client)
-	u, _ := URL.parse(r.URL)
-	cookies := jar.Cookies(u)
+	cookies := jar.Cookies(req.URL)
 	for k, v := range r.Cookies {
 		cookies = append(cookies, &http.Cookie{Name: k, Value: v})
 	}
-	jar.SetCookies(u, cookies)
+	jar.SetCookies(req.URL, cookies)
 }
 
 func cookieJar(c *http.Client) {
