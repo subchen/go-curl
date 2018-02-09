@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 )
 
-type Auth interface {
+type authorize interface {
 	Authorization() string
 }
 
@@ -18,7 +18,7 @@ type TokenAuth struct {
 }
 
 func (a *BasicAuth) Authorization() string {
-	auth := b.Username + ":" + b.Password
+	auth := a.Username + ":" + b.Password
 	return "Basic " + base64.StdEncoding.EncodeToString([]byte(auth))
 }
 
