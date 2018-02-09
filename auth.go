@@ -5,7 +5,7 @@ import (
 )
 
 type Auth interface {
-	AuthValue() string
+	Authorization() string
 }
 
 type BasicAuth struct {
