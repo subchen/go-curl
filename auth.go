@@ -25,3 +25,18 @@ func (a *BasicAuth) Authorization() string {
 func (a *TokenAuth) Authorization() string {
 	return "token " + a.Token
 }
+
+func (r *Request) applyAuth() {
+	if r.Auth == nil {
+		return
+	}
+
+	switch v := r.Auth.(type) {
+	case authorize:
+		r.Headers["Authorization"] = v.Authorization()
+	case string:
+		r.Headers["Authorization"] = v
+	default:
+		panic(fmt.Errorf("unsupport request.Auth type: %T", v))
+	}
+}
