@@ -34,8 +34,11 @@ type File struct {
 var DEFAULT_FORM_CONTENT_TYPE = "application/x-www-form-urlencoded; charset=utf-8"
 var DEFAULT_JSON_CONTENT_TYPE = "application/json; charset=utf-8"
 
-func (r *Request) Do() (*Response, error) {
-	req, err := r.build()
+func NewRequest() *Request {
+
+}
+
+func (r *Request) Do() (*Response, error) 	req, err := r.build()
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +50,7 @@ func (r *Request) Do() (*Response, error) {
 
 func (r *Request) newHttpRequest() (*http.Request, error) {
 	if r.Client == nil {
-		r.Client = http.DefaultClient
+		r.Client = new(http.Client)
 	}
 
 	req, err := http.NewRequest(r.Method, r.newURL(), r.newBody())
