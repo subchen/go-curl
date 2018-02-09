@@ -58,7 +58,7 @@ func (r *Request) newHttpRequest() (*http.Request, error) {
 
 	if r.Auth != nil {
 		switch v := r.Body.(type) {
-		case Auth:
+		case authorize:
 			r.Headers["Authorization"] = v.Authorization()
 		case string:
 			r.Headers["Authorization"] = v
