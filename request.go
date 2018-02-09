@@ -32,19 +32,6 @@ type File struct {
 	Filename  string
 }
 
-type Auth interface {
-	AuthValue() string
-}
-
-type BasicAuth struct {
-	Username string
-	Password string
-}
-
-type TokenAuth struct {
-	Token string
-}
-
 var DEFAULT_FORM_CONTENT_TYPE = "application/x-www-form-urlencoded; charset=utf-8"
 var DEFAULT_JSON_CONTENT_TYPE = "application/json; charset=utf-8"
 
@@ -71,10 +58,8 @@ func (r *Request) newHttpRequest() (*http.Request, error) {
 
 	if r.Auth != nil {
 		switch v := r.Body.(type) {
-		case *BasicAuth:
-			r.Headers["Authorization"] = v.String()
-		case *TokenAuth:
-			r.Headers["Authorization"] = v.String()
+		case Auth:
+			r.Headers["Authorization"] = v.Authorization()
 		case string:
 			r.Headers["Authorization"] = v
 		default:
