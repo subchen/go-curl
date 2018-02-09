@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"mime/multipart"
 	"net/http"
 	"net/url"
 	"os"
@@ -56,16 +55,9 @@ func (r *Request) newHttpRequest() (*http.Request, error) {
 		return nil, err
 	}
 
-	if r.Auth != nil {
-		switch v := r.Body.(type) {
-		case authorize:
-			r.Headers["Authorization"] = v.Authorization()
-		case string:
-			r.Headers["Authorization"] = v
-		default:
-			panic(fmt.Errorf("unsupport request.Auth type: %T", v))
-		}
-	}
+	r.applyAuth()
+	r.applyCookies(req)
+	r.applyHeaders(req)
 
 	return req, nil
 }
