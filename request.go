@@ -1,4 +1,4 @@
-package request
+package curl
 
 import (
 	"bytes"
@@ -30,10 +30,15 @@ var DEFAULT_FORM_CONTENT_TYPE = "application/x-www-form-urlencoded; charset=utf-
 var DEFAULT_JSON_CONTENT_TYPE = "application/json; charset=utf-8"
 
 func NewRequest() *Request {
-
+	return &Request{
+		Client:  new(http.Client),
+		Method:  "GET",
+		Headers: map[string]string{},
+	}
 }
 
-func (r *Request) Do() (*Response, error) 	req, err := r.build()
+func (r *Request) Do() (*Response, error) {
+	req, err := r.build()
 	if err != nil {
 		return nil, err
 	}
@@ -43,9 +48,26 @@ func (r *Request) Do() (*Response, error) 	req, err := r.build()
 	return nil, &Response{resp, err}
 }
 
+func (r *Request) Reset() {
+	r.Method = "GET"
+	r.URL = nil
+	r.QueryString = nil
+	r.Headers = map[string]string{}
+	r.Cookies = nil
+	r.Body = nil
+	r.Json = nil
+	r.Form = nil
+	r.Files = nil
+	r.Auth = nil
+	r.Proxy = ""
+}
+
 func (r *Request) newHttpRequest() (*http.Request, error) {
 	if r.Client == nil {
 		r.Client = new(http.Client)
+	}
+	if r.Method == "" {
+		r.Method = "GET"
 	}
 
 	req, err := http.NewRequest(r.Method, r.newURL(), r.newBody())
