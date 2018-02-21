@@ -4,8 +4,8 @@ import (
 	"encoding/base64"
 )
 
-type authorize interface {
-	Authorization() string
+type authorization interface {
+	AuthorizationHeader() string
 }
 
 type BasicAuth struct {
@@ -17,12 +17,12 @@ type TokenAuth struct {
 	Token string
 }
 
-func (a *BasicAuth) Authorization() string {
+func (a *BasicAuth) AuthorizationHeader() string {
 	auth := a.Username + ":" + b.Password
 	return "Basic " + base64.StdEncoding.EncodeToString([]byte(auth))
 }
 
-func (a *TokenAuth) Authorization() string {
+func (a *TokenAuth) AuthorizationHeader() string {
 	return "token " + a.Token
 }
 
@@ -32,11 +32,11 @@ func (r *Request) applyAuth() {
 	}
 
 	switch v := r.Auth.(type) {
-	case authorize:
-		r.Headers["Authorization"] = v.Authorization()
+	case authorization:
+		r.Headers["Authorization"] = v.AuthorizationHeader()
 	case string:
 		r.Headers["Authorization"] = v
 	default:
-		panic(fmt.Errorf("unsupport request.Auth type: %T", v))
+		panic(fmt.Errorf("unsupported request.Auth type: %T", v))
 	}
 }
