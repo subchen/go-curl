@@ -26,11 +26,6 @@ type Request struct {
 	Proxy       string
 }
 
-type File struct {
-	Fieldname string
-	Filename  string
-}
-
 var DEFAULT_FORM_CONTENT_TYPE = "application/x-www-form-urlencoded; charset=utf-8"
 var DEFAULT_JSON_CONTENT_TYPE = "application/json; charset=utf-8"
 
