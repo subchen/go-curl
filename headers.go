@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-var DefaultUserAgent = "subchen/go-request:v0.1.0"
+var DefaultUserAgent = "subchen/go-cli:v0.1.0"
 
 var DefaultHeaders = map[string]string{
 	"Connection":      "keep-alive",
