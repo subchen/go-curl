@@ -15,15 +15,15 @@ type Request struct {
 	Client      *http.Client
 	Method      string
 	URL         string
-	QueryString interface{}
+	QueryString interface{}	// *url.Values, map[string]string, map[string][]string
 	Headers     map[string]string
 	Cookies     map[string]string
-	Body        interface{}
-	Json        interface{}
-	Form        interface{}
+	Body        interface{}	// io.Reader, string
+	Json        interface{} // any
+	Form        interface{} // *url.Values, map[string]string, map[string][]string
 	Files       []File
-	Auth        interface{}
-	Proxy       string
+	Auth        interface{} // authorization(BasicAuth, TokenAuth, ...), string
+	Proxy       string // http(s)://..., sock5://...
 }
 
 var Version = "1.0.0"
@@ -37,14 +37,85 @@ func NewRequest() *Request {
 }
 
 func (r *Request) Do() (*Response, error) {
-	req, err := r.build()
+	if r.Client == nil {
+		r.Client = new(http.Client)
+	}
+	if r.Method == "" {
+		r.Method = "GET"
+	}
+
+	body, err := r.newBody()
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err = r.Client.Do(req)
+	req, err := http.NewRequest(r.Method, r.newURL(), body)
+	if err != nil {
+		return nil, err
+	}
 
-	return nil, &Response{resp, err}
+	r.applyAuth()
+	r.applyCookies(req)
+	r.applyHeaders(req)
+
+	resp, err = r.Client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	return &Response{resp}, nil
+}
+
+func (r *Request) newURL() string {
+	if r.QueryString == nil {
+		return r.URL
+	}
+
+	qs := newURLValues(r.QueryString)
+	if strings.Contains(u, "?") {
+		return r.URL + "&" + qs.Encode()
+	}
+	return r.URL + "?" + qs.Encode()
+}
+
+func (r *Request) newBody() (io.Reader, error) {
+	// html5 payload
+	if r.Body != nil {
+		switch v := r.Body.(type) {
+		case io.Reader:
+			r.applyContentType(DefaultPayloadContentType)
+			return nil
+		case string:
+			r.Body = strings.NewReader(v)
+			r.applyContentType(DefaultPayloadContentType)
+			return nil
+		default:
+			panic(fmt.Errorf("unsupport request.Body type: %T", v))
+		}
+	}
+
+	// json
+	if r.Json != nil {
+		body, err := json.Marshal(r.Json)
+		if err != nil {
+			return err
+		}
+		r.Body = bytes.NewReader(b)
+		r.applyContentType(DefaultJsonContentType)
+		return nil
+	}
+
+	// multipart body
+	if r.Files != nil {
+		return r.newMultipartBody()
+	}
+
+	// form data
+	if r.Form != nil {
+		form := newURLValues(r.Form)
+		r.Body = strings.NewReader(form.Encode())
+		r.applyContentType(DefaultFormContentType)
+		return nil
+	}
 }
 
 func (r *Request) Reset() {
@@ -59,79 +130,6 @@ func (r *Request) Reset() {
 	r.Files = nil
 	r.Auth = nil
 	r.Proxy = ""
-}
-
-func (r *Request) newHttpRequest() (*http.Request, error) {
-	if r.Client == nil {
-		r.Client = new(http.Client)
-	}
-	if r.Method == "" {
-		r.Method = "GET"
-	}
-
-	req, err := http.NewRequest(r.Method, r.newURL(), r.newBody())
-	if err != nil {
-		return nil, err
-	}
-
-	r.applyAuth()
-	r.applyCookies(req)
-	r.applyHeaders(req)
-
-	return req, nil
-}
-
-func (r *Request) newURL() {
-	if r.QueryString == nil {
-		return r.URL
-	}
-
-	qs := newURLValues(r.QueryString)
-	if strings.Contains(u, "?") {
-		return r.URL + "&" + qs.Encode()
-	}
-	return r.URL + "?" + qs.Encode()
-}
-
-func (r *Request) newBody() error {
-	// html5 payload
-	if r.Body != nil {
-		switch v := r.Body.(type) {
-		case io.Reader:
-			r.setContentType(DefaultPayloadContentType)
-			return nil
-		case string:
-			r.Body = strings.NewReader(v)
-			r.setContentType(DefaultPayloadContentType)
-			return nil
-		default:
-			panic(fmt.Errorf("unsupport request.Body type: %T", v))
-		}
-	}
-
-	// json
-	if r.Json != nil {
-		body, err := json.Marshal(r.Json)
-		if err != nil {
-			return err
-		}
-		r.Body = bytes.NewReader(b)
-		r.setContentType(DefaultJsonContentType)
-		return nil
-	}
-
-	// multipart body
-	if r.Files != nil {
-		return r.newMultipartBody()
-	}
-
-	// form data
-	if r.Form != nil {
-		form := newURLValues(r.Form)
-		r.Body = strings.NewReader(form.Encode())
-		r.setContentType(DefaultFormContentType)
-		return nil
-	}
 }
 
 func newURLValues(value interface{}) *url.Values {
