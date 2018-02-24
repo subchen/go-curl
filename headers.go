@@ -20,6 +20,12 @@ const (
 	DefaultFormContentType    = "application/x-www-form-urlencoded; charset=utf-8"
 )
 
+func (r *Request) applyContentType(contentType string) {
+	if _, ok := r.Headers["Content-Type"]; !ok {
+		r.Headers["Content-Type"] = contentType
+	}	
+}
+
 func (r *Request) applyHeaders(req *http.Request) {
 	// apply custom Headers
 	for k, v := range r.Headers {
@@ -32,10 +38,4 @@ func (r *Request) applyHeaders(req *http.Request) {
 			req.Header.Set(k, v)
 		}
 	}
-}
-
-func (r *Request) setContentType(contentType string) {
-	if _, ok := r.Headers["Content-Type"]; !ok {
-		r.Headers["Content-Type"] = contentType
-	}	
 }
