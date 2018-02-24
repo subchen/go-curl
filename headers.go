@@ -27,7 +27,7 @@ func (r *Request) applyHeaders(req *http.Request, contentType string) {
 	}
 
 	// apply contentType
-	if _, ok := req.Header.Get("Content-Type"); !ok {
+	if _, ok := r.Headers["Content-Type"]; !ok {
 		req.Header.Set("Content-Type", contentType)
 	}
 
