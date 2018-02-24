@@ -42,8 +42,8 @@ func (r *Request) newMultipartBody() error {
 		}
 	}
 
-	r.Headers["Content-Type"] = bodyWriter.FormDataContentType()
 	r.Body = bodyBuffer
+	r.Headers["Content-Type"] = bodyWriter.FormDataContentType()
 
 	return nil
 }
