@@ -14,9 +14,7 @@ var DefaultHeaders = map[string]string{
 }
 
 
-const (
-	HeaderContentType = "Content-Type"
-	
+const (	
 	DefaultPayloadContentType = "application/octoc-streams"	
 	DefaultJsonContentType    = "application/json; charset=utf-8"
 	DefaultFormContentType    = "application/x-www-form-urlencoded; charset=utf-8"
@@ -37,7 +35,7 @@ func (r *Request) applyHeaders(req *http.Request) {
 }
 
 func (r *Request) setContentType(contentType string) {
-	if _, ok := r.Headers[HeaderContentType]; !ok {
-		r.Headers[HeaderContentType] = contentType
+	if _, ok := r.Headers["Content-Type"]; !ok {
+		r.Headers["Content-Type"] = contentType
 	}	
 }
