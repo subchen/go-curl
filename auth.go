@@ -1,4 +1,4 @@
-package request
+package curl
 
 import (
 	"encoding/base64"
