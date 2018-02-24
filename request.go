@@ -26,11 +26,6 @@ type Request struct {
 	Proxy       string
 }
 
-const (
-	DEFAULT_FORM_CONTENT_TYPE = "application/x-www-form-urlencoded; charset=utf-8"
-	DEFAULT_JSON_CONTENT_TYPE = "application/json; charset=utf-8"
-)
-
 var Version = "1.0.0"
 
 func NewRequest() *Request {
@@ -101,12 +96,13 @@ func (r *Request) newURL() {
 func (r *Request) newBody() error {
 	// html5 payload
 	if r.Body != nil {
-		r.setContentType(DEFAULT_CONTENT_TYPE)
 		switch v := r.Body.(type) {
 		case io.Reader:
+			r.setContentType(DefaultPayloadContentType)
 			return nil
 		case string:
 			r.Body = strings.NewReader(v)
+			r.setContentType(DefaultPayloadContentType)
 			return nil
 		default:
 			panic(fmt.Errorf("unsupport request.Body type: %T", v))
@@ -115,12 +111,12 @@ func (r *Request) newBody() error {
 
 	// json
 	if r.Json != nil {
-		r.setContentType(DEFAULT_JSON_CONTENT_TYPE)
 		body, err := json.Marshal(r.Json)
 		if err != nil {
 			return err
 		}
 		r.Body = bytes.NewReader(b)
+		r.setContentType(DefaultJsonContentType)
 		return nil
 	}
 
@@ -131,9 +127,9 @@ func (r *Request) newBody() error {
 
 	// form data
 	if r.Form != nil {
-		r.setContentType(DEFAULT_FORM_CONTENT_TYPE)
 		form := newURLValues(r.Form)
 		r.Body = strings.NewReader(form.Encode())
+		r.setContentType(DefaultFormContentType)
 		return nil
 	}
 }
