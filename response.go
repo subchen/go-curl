@@ -59,14 +59,14 @@ func (resp *Response) OK() bool {
 	return resp.StatusCode < 400
 }
 
-// JSON return Response Body as data.Query
+// JSONMap return Response Body as map[string]interface{}
 func (resp *Response) JSONMap() (map[string]interface{}, error) {
 	v := make(map[string]interface{})
 	err := resp.JSONObject(&v)
 	return v, err
 }
 
-// JSON return Response Body as data.Query
+// JSONObject unmarshal Response Body
 func (resp *Response) JSONObject(data interface{}) error {
 	b, err := resp.Body()
 	if err != nil {
