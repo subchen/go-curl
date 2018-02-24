@@ -27,8 +27,6 @@ type Request struct {
 	RedirectDisabled bool
 }
 
-var Version = "1.0.0"
-
 func NewRequest() *Request {
 	return &Request{
 		Client:  new(http.Client),
@@ -80,7 +78,7 @@ func (r *Request) newURL() string {
 
 func (r *Request) Reset() {
 	r.Method = "GET"
-	r.URL = nil
+	r.URL = ""
 	r.QueryString = nil
 	r.Headers = map[string]string{}
 	r.Cookies = nil
