@@ -1,4 +1,4 @@
-package requests
+package curl
 
 import (
 	"net/http"
