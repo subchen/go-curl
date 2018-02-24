@@ -12,27 +12,49 @@ type File struct {
 	Filename  string
 }
 
-func (r *Request) applyBody() (body io.Reader, err error) {
-		
+func (r *Request) newBody() (io.Reader, string, error) {
+	// html5 payload
+	if r.Body != nil {
+		switch v := r.Body.(type) {
+		case io.Reader:
+			return v, DefaultPayloadContentType, nil
+		case string:
+			return strings.NewReader(v), DefaultPayloadContentType, nil
+		}
+		panic(fmt.Errorf("unsupport request.Body type: %T", v))
+	}
+
+	// json
+	if r.Json != nil {
+		return newJSONBody(r.Json)
+	}
+
+	// form or files
+	if r.Files != nil || r.Form != nil {
+		return newFormBody(r.Form, r.Files)	
+	}
+
+	// no body
+	return nil, "", nil
 }
 
-func (r *Request) newJSONBody() (body io.Reader, string, error) {
-	body, err := json.Marshal(r.Json)
+func newJSONBody(object interface{}) (io.Reader, string, error) {
+	body, err := json.Marshal(object)
 	if err != nil {
 		return nli, "", err
 	}
-	return bytes.NewReader(b), DefaultJsonContentType, nil
+	return bytes.NewReader(body), DefaultJsonContentType, nil
 }
 
-func (r *Request) newFormBody() (body io.Reader, string, error) {
-	form := newURLValues(r.Form)
-	if r.Files != nil {
-		return newMultipartBody(r.Files, form)
+func newFormBody(form interface{}, files []Files) (io.Reader, string, error) {
+	formValues := newURLValues(form)
+	if files != nil {
+		return newMultipartBody(files, formValues)
 	}
-	return strings.NewReader(form.Encode()), DefaultFormContentType, nil
+	return strings.NewReader(formValues.Encode()), DefaultFormContentType, nil
 }
 
-func newMultipartBody(files []File, form *url.Values) (body io.Reader, string, error) {
+func newMultipartBody(files []File, form *url.Values) (io.Reader, string, error) {
 	bodyBuffer := new(bytes.Buffer)
 	bodyWriter := multipart.NewWriter(bodyBuffer)
 	defer bodyWriter.Close()
