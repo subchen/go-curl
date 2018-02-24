@@ -14,6 +14,12 @@ var DefaultHeaders = map[string]string{
 }
 
 
+const (
+	DefaultPayloadContentType = "application/octoc-streams"	
+	DefaultJsonContentType    = "application/json; charset=utf-8"
+	DefaultFormContentType    = "application/x-www-form-urlencoded; charset=utf-8"
+)
+
 func (r *Request) applyHeaders(req *http.Request) {
 	// apply custom Headers
 	for k, v := range r.Headers {
