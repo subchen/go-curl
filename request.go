@@ -24,6 +24,7 @@ type Request struct {
 	Files       []File
 	Auth        interface{} // authorization(BasicAuth, TokenAuth, ...), string
 	Proxy       string // http(s)://..., sock5://...
+	Redirect    bool
 }
 
 var Version = "1.0.0"
@@ -130,6 +131,7 @@ func (r *Request) Reset() {
 	r.Files = nil
 	r.Auth = nil
 	r.Proxy = ""
+	r.Redirect = false
 }
 
 func newURLValues(value interface{}) *url.Values {
