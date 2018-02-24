@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-var DefaultUserAgent = "subchen/go-curl:" + Version
+var DefaultUserAgent = "subchen/go-curl"
 
 var DefaultHeaders = map[string]string{
 	"Connection":      "keep-alive",
@@ -27,8 +27,8 @@ func (r *Request) applyHeaders(req *http.Request, contentType string) {
 	}
 
 	// apply contentType
-	if _, ok := r.Headers["Content-Type"]; !ok {
-		r.Headers["Content-Type"] = contentType
+	if _, ok := req.Header.Get("Content-Type"); !ok {
+		req.Header.Set("Content-Type", contentType)
 	}
 
 	// apply default headers
