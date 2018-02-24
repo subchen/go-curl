@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-var DefaultUserAgent = "subchen/go-cli:" + Version
+var DefaultUserAgent = "subchen/go-curl:" + Version
 
 var DefaultHeaders = map[string]string{
 	"Connection":      "keep-alive",
@@ -26,4 +26,10 @@ func (r *Request) applyHeaders(req *http.Request) {
 			req.Header.Set(k, v)
 		}
 	}
+}
+
+func (r *Request) setContentType(contentType string) {
+	if _, ok := r.Headers["Content-type"]; !ok {
+		r.Headers["Content-type"] = contentType
+	}	
 }
