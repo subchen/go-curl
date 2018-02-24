@@ -98,14 +98,16 @@ func (r *Request) newURL() {
 	return r.URL + "?" + qs.Encode()
 }
 
-func (r *Request) newBody() (body io.Reader, contentType string, err error) {
+func (r *Request) newBody() error {
 	// html5 payload
 	if r.Body != nil {
+		r.setContentType(DEFAULT_CONTENT_TYPE)
 		switch v := r.Body.(type) {
 		case io.Reader:
-			return r.Body, DEFAULT_CONTENT_TYPE, nil
+			return nil
 		case string:
-			return strings.NewReader(v), DEFAULT_CONTENT_TYPE, nil
+			r.Body = strings.NewReader(v)
+			return nil
 		default:
 			panic(fmt.Errorf("unsupport request.Body type: %T", v))
 		}
@@ -113,49 +115,26 @@ func (r *Request) newBody() (body io.Reader, contentType string, err error) {
 
 	// json
 	if r.Json != nil {
+		r.setContentType(DEFAULT_JSON_CONTENT_TYPE)
 		body, err := json.Marshal(r.Json)
 		if err != nil {
-			return nil, "", err
+			return err
 		}
-		return bytes.NewReader(b), DEFAULT_JSON_CONTENT_TYPE, nil
+		r.Body = bytes.NewReader(b)
+		return nil
 	}
 
 	// multipart body
 	if r.Files != nil {
-		bodyBuffer := new(bytes.Buffer)
-		bodyWriter := multipart.NewWriter(bodyBuffer)
-		defer bodyWriter.Close()
-
-		for _, file := range r.Files {
-			fileWriter, err := bodyWriter.CreateFormFile(file.Fieldname, file.Filename)
-			if err != nil {
-				return nil, "", err
-			}
-
-			f, err := os.Open(file.Filename)
-			if err != nil {
-				return nil, "", err
-			}
-			defer f.Close()
-
-			_, err = io.Copy(fileWriter, f)
-			if err != nil {
-				return nil, "", err
-			}
-		}
-		if r.Form != nil {
-			form := newURLValues(r.Form)
-			for k, v := range form {
-				bodyWriter.WriteField(k, v)
-			}
-		}
-
-		return bodyBuffer, bodyWriter.FormDataContentType(), nil
+		return r.newMultipartBody()
 	}
 
+	// form data
 	if r.Form != nil {
+		r.setContentType(DEFAULT_FORM_CONTENT_TYPE)
 		form := newURLValues(r.Form)
-		return strings.NewReader(form.Encode()), DEFAULT_FORM_CONTENT_TYPE, nil
+		r.Body = strings.NewReader(form.Encode())
+		return nil
 	}
 }
 
