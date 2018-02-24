@@ -26,8 +26,12 @@ type Request struct {
 	Proxy       string
 }
 
-var DEFAULT_FORM_CONTENT_TYPE = "application/x-www-form-urlencoded; charset=utf-8"
-var DEFAULT_JSON_CONTENT_TYPE = "application/json; charset=utf-8"
+const (
+	DEFAULT_FORM_CONTENT_TYPE = "application/x-www-form-urlencoded; charset=utf-8"
+	DEFAULT_JSON_CONTENT_TYPE = "application/json; charset=utf-8"
+)
+
+var Version = "1.0.0"
 
 func NewRequest() *Request {
 	return &Request{
