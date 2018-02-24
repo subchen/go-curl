@@ -3,6 +3,7 @@ package curl
 import (
 	"compress/gzip"
 	"compress/zlib"
+	"encoding/json"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -13,15 +14,6 @@ import (
 type Response struct {
 	*http.Response
 	body []byte
-}
-
-// JSON return Response Body as data.Query
-func (resp *Response) JSON() (*data.Query, error) {
-	b, err := resp.Body()
-	if err != nil {
-		return nil, err
-	}
-	return json.NewQueryFromBytes(b)
 }
 
 // Content return Response Body as []byte
@@ -67,8 +59,24 @@ func (resp *Response) OK() bool {
 	return resp.StatusCode < 400
 }
 
-// URL return finally request url
-func (resp *Response) URL() (*url.URL, error) {
+// JSON return Response Body as data.Query
+func (resp *Response) JSONMap() (map[string]interface{}, error) {
+	v := make(map[string]interface{})
+	err := resp.JSONObject(&v)
+	return v, err
+}
+
+// JSON return Response Body as data.Query
+func (resp *Response) JSONObject(data interface{}) error {
+	b, err := resp.Body()
+	if err != nil {
+		return nil, err
+	}
+	return json.Unmarshal(b, data)
+}
+
+// RequestURL return finally request url
+func (resp *Response) RequestURL() (*url.URL, error) {
 	u := resp.Request.URL
 	switch resp.StatusCode {
 	case http.StatusMovedPermanently, http.StatusFound,
