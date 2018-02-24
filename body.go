@@ -57,7 +57,7 @@ func newMultipartBody(files []File, form *url.Values) (body io.Reader, string, e
 
 	if form != nil {
 		for k, vs := range form {
-			for v := range vs {
+			for _, v := range vs {
 				bodyWriter.WriteField(k, v)
 			}
 		}
