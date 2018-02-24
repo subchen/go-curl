@@ -87,3 +87,29 @@ func newMultipartBody(files []File, form *url.Values) (io.Reader, string, error)
 
 	return bodyBuffer, bodyWriter.FormDataContentType(), nil
 }
+
+func newURLValues(value interface{}) *url.Values {
+	if value == nil {
+		return nil
+	}
+
+	switch v := value.(type) {
+	case *url.Values:
+		return v
+	case map[string]string:
+		vals := new(url.Values)
+		for k, v := range v {
+			vals.Set(k, v)
+		}
+		return vals
+	case map[string][]string:
+		vals = new(url.Values)
+		for k, vs := range v {
+			for _, v := range vs {
+				vals.Add(k, v)
+			}
+		}
+		return vals
+	}
+	panic(fmt.Errorf("unable to convert type %T to *url.Values", value))
+}
