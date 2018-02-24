@@ -45,7 +45,7 @@ func (r *Request) Do() (*Response, error) {
 		r.Method = "GET"
 	}
 
-	body, err := r.newBody()
+	body, contentType, err := r.newBody()
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func (r *Request) Do() (*Response, error) {
 
 	r.applyAuth()
 	r.applyCookies(req)
-	r.applyHeaders(req)
+	r.applyHeaders(req, contentType)
 
 	resp, err = r.Client.Do(req)
 	if err != nil {
@@ -78,47 +78,6 @@ func (r *Request) newURL() string {
 	return r.URL + "?" + qs.Encode()
 }
 
-func (r *Request) newBody() (io.Reader, error) {
-	// html5 payload
-	if r.Body != nil {
-		switch v := r.Body.(type) {
-		case io.Reader:
-			r.applyContentType(DefaultPayloadContentType)
-			return nil
-		case string:
-			r.Body = strings.NewReader(v)
-			r.applyContentType(DefaultPayloadContentType)
-			return nil
-		default:
-			panic(fmt.Errorf("unsupport request.Body type: %T", v))
-		}
-	}
-
-	// json
-	if r.Json != nil {
-		body, err := json.Marshal(r.Json)
-		if err != nil {
-			return err
-		}
-		r.Body = bytes.NewReader(b)
-		r.applyContentType(DefaultJsonContentType)
-		return nil
-	}
-
-	// multipart body
-	if r.Files != nil {
-		return r.newMultipartBody()
-	}
-
-	// form data
-	if r.Form != nil {
-		form := newURLValues(r.Form)
-		r.Body = strings.NewReader(form.Encode())
-		r.applyContentType(DefaultFormContentType)
-		return nil
-	}
-}
-
 func (r *Request) Reset() {
 	r.Method = "GET"
 	r.URL = nil
@@ -132,30 +91,4 @@ func (r *Request) Reset() {
 	r.Auth = nil
 	r.Proxy = ""
 	r.RedirectDisabled = false
-}
-
-func newURLValues(value interface{}) *url.Values {
-	if value == nil {
-		return nil
-	}
-
-	switch v := value.(type) {
-	case *url.Values:
-		return v
-	case map[string]string:
-		vals := new(url.Values)
-		for k, v := range v {
-			vals.Set(k, v)
-		}
-		return vals
-	case map[string][]string:
-		vals = new(url.Values)
-		for k, vs := range v {
-			for _, v := range vs {
-				vals.Add(k, v)
-			}
-		}
-		return vals
-	}
-	panic(fmt.Errorf("unable to convert type %T to *url.Values", value))
 }
