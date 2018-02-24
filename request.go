@@ -12,19 +12,19 @@ import (
 )
 
 type Request struct {
-	Client      *http.Client
-	Method      string
-	URL         string
-	QueryString interface{}	// *url.Values, map[string]string, map[string][]string
-	Headers     map[string]string
-	Cookies     map[string]string
-	Body        interface{}	// io.Reader, string
-	Json        interface{} // any
-	Form        interface{} // *url.Values, map[string]string, map[string][]string
-	Files       []File
-	Auth        interface{} // authorization(BasicAuth, TokenAuth, ...), string
-	Proxy       string // http(s)://..., sock5://...
-	Redirect    bool
+	Client           *http.Client
+	Method           string
+	URL              string
+	QueryString      interface{}	// *url.Values, map[string]string, map[string][]string
+	Headers          map[string]string
+	Cookies          map[string]string
+	Body             interface{}	// io.Reader, string
+	Json             interface{} // any
+	Form             interface{} // *url.Values, map[string]string, map[string][]string
+	Files            []File
+	Auth             interface{} // authorization(BasicAuth, TokenAuth, ...), string
+	Proxy            string // http(s)://..., sock5://...
+	RedirectDisabled bool
 }
 
 var Version = "1.0.0"
@@ -131,7 +131,7 @@ func (r *Request) Reset() {
 	r.Files = nil
 	r.Auth = nil
 	r.Proxy = ""
-	r.Redirect = false
+	r.RedirectDisabled = false
 }
 
 func newURLValues(value interface{}) *url.Values {
