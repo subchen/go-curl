@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-type File struct {
+type UploadFile struct {
 	Fieldname string
 	Filename  string
 }
@@ -25,8 +25,8 @@ func (r *Request) newBody() (io.Reader, string, error) {
 	}
 
 	// json
-	if r.Json != nil {
-		return newJSONBody(r.Json)
+	if r.JSON != nil {
+		return newJSONBody(r.JSON)
 	}
 
 	// form or files
@@ -46,7 +46,7 @@ func newJSONBody(object interface{}) (io.Reader, string, error) {
 	return bytes.NewReader(body), DefaultJsonContentType, nil
 }
 
-func newFormBody(form interface{}, files []Files) (io.Reader, string, error) {
+func newFormBody(form interface{}, files []UploadFile) (io.Reader, string, error) {
 	formValues := newURLValues(form)
 	if files != nil {
 		return newMultipartBody(files, formValues)
@@ -54,7 +54,7 @@ func newFormBody(form interface{}, files []Files) (io.Reader, string, error) {
 	return strings.NewReader(formValues.Encode()), DefaultFormContentType, nil
 }
 
-func newMultipartBody(files []File, form *url.Values) (io.Reader, string, error) {
+func newMultipartBody(files []UploadFile, form *url.Values) (io.Reader, string, error) {
 	bodyBuffer := new(bytes.Buffer)
 	bodyWriter := multipart.NewWriter(bodyBuffer)
 	defer bodyWriter.Close()
