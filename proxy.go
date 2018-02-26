@@ -10,7 +10,7 @@ import (
 	"golang.org/x/net/proxy"
 )
 
-func (r *Request) applyProxy() (err error) {
+func (r *Request) applyProxy(req *http.Request) (err error) {
 	if r.ProxyURL == "" {
 		return nil
 	}
@@ -22,27 +22,14 @@ func (r *Request) applyProxy() (err error) {
 
 	switch u.Scheme {
 	case "http", "https":
-		dialer := &net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 30 * time.Second,
-		}
-		r.Client.Transport = &http.Transport{
-			Proxy: 	             http.ProxyURL(u),
-			Dial:                dialer.Dial,
-			TLSClientConfig:     &tls.Config{InsecureSkipVerify: r.InsecureSkipVerify},
-			TLSHandshakeTimeout: 10 * time.Second,
-		}
+		r.Client.Transport.Proxy = http.ProxyURL(u)
 	case "socks5":
 		dialer, err := proxy.FromURL(u, proxy.Direct)
 		if err != nil {
 			return err
 		}
-		r.Client.Transport = &http.Transport{
-			Proxy:               http.ProxyFromEnvironment,
-			Dial:                dialer.Dial,
-			TLSClientConfig:     &tls.Config{InsecureSkipVerify: r.InsecureSkipVerify},
-			TLSHandshakeTimeout: 10 * time.Second,
-		}
+		r.Client.Transport.Dial = dialer.Dial
+		r.Client.Transport.Proxy = http.ProxyFromEnvironment(req)
 	}
 
 	return nil
