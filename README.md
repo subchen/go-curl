@@ -7,7 +7,7 @@ A Go HTTP client library for creating and sending API requests
 
 ## Examples
 
-```
+```go
 import "github.com/subchen/go-curl"
 ```
 

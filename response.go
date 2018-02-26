@@ -68,8 +68,8 @@ func (resp *Response) JSON() (map[string]interface{}, error) {
 	return v, err
 }
 
-// UnmarshalJSON unmarshal Response Body
-func (resp *Response) UnmarshalJSON(data interface{}) error {
+// JSONUnmarshal unmarshal Response Body
+func (resp *Response) JSONUnmarshal(data interface{}) error {
 	b, err := resp.Content()
 	if err != nil {
 		return err
