@@ -1,6 +1,7 @@
 package curl
 
 import (
+	"crypto/tls"
 	"net"
 	"net/http"
 	"net/url"
@@ -28,6 +29,7 @@ func (r *Request) applyProxy() (err error) {
 		r.Client.Transport = &http.Transport{
 			Proxy: 	             http.ProxyURL(u),
 			Dial:                dialer.Dial,
+			TLSClientConfig:     &tls.Config{InsecureSkipVerify: r.InsecureSkipVerify},
 			TLSHandshakeTimeout: 10 * time.Second,
 		}
 	case "socks5":
@@ -38,6 +40,7 @@ func (r *Request) applyProxy() (err error) {
 		r.Client.Transport = &http.Transport{
 			Proxy:               http.ProxyFromEnvironment,
 			Dial:                dialer.Dial,
+			TLSClientConfig:     &tls.Config{InsecureSkipVerify: r.InsecureSkipVerify},
 			TLSHandshakeTimeout: 10 * time.Second,
 		}
 	}
