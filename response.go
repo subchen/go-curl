@@ -59,15 +59,15 @@ func (resp *Response) OK() bool {
 	return resp.StatusCode < 400
 }
 
-// JSONMap return Response Body as map[string]interface{}
-func (resp *Response) JSONMap() (map[string]interface{}, error) {
+// JSON return Response Body as map[string]interface{}
+func (resp *Response) JSON() (map[string]interface{}, error) {
 	v := make(map[string]interface{})
 	err := resp.JSONObject(&v)
 	return v, err
 }
 
-// JSONObject unmarshal Response Body
-func (resp *Response) JSONObject(data interface{}) error {
+// UnmarshalJSON unmarshal Response Body
+func (resp *Response) UnmarshalJSON(data interface{}) error {
 	b, err := resp.Body()
 	if err != nil {
 		return nil, err
