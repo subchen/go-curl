@@ -5,7 +5,7 @@
 
 A Go HTTP client library for creating and sending API requests
 
-## Basic Example
+## Examples
 
 ```
 import "github.com/subchen/go-curl"
@@ -13,7 +13,7 @@ import "github.com/subchen/go-curl"
 
 ### Basic request
 
-```
+```go
 req := curl.NewRequest()
 req.Method = "GET"
 req.URL = "http://example.com/api/users"
@@ -26,7 +26,7 @@ fmt.Println(resp.Text())
 
 ### Chained request
 
-```
+```go
 user := newUser()
 req := curl.NewRequest()
 resp, err := req.SetJSON(user).Post("http://example.com/api/users")
