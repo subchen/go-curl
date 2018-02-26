@@ -17,12 +17,13 @@ type Response struct {
 }
 
 // Content return Response Body as []byte
-func (resp *Response) Body() ([]byte, error) {
+func (resp *Response) Content() ([]byte, error) {
 	if resp.body != nil {
 		return resp.body, nil
 	}
 
 	var reader io.ReadCloser
+	var err error
 	switch resp.Header.Get("Content-Encoding") {
 	case "gzip":
 		if reader, err = gzip.NewReader(resp.Body); err != nil {
@@ -37,17 +38,18 @@ func (resp *Response) Body() ([]byte, error) {
 	}
 
 	defer reader.Close()
-	if b, err = ioutil.ReadAll(reader); err != nil {
+	b, err := ioutil.ReadAll(reader)
+	if err != nil {
 		return nil, err
 	}
 
 	resp.body = b
-	return b, err
+	return b, nil
 }
 
 // Text return Response Body as string
 func (resp *Response) Text() (string, error) {
-	b, err := resp.Body()
+	b, err := resp.Content()
 	if err != nil {
 		return "", nil
 	}
@@ -62,15 +64,15 @@ func (resp *Response) OK() bool {
 // JSON return Response Body as map[string]interface{}
 func (resp *Response) JSON() (map[string]interface{}, error) {
 	v := make(map[string]interface{})
-	err := resp.JSONObject(&v)
+	err := resp.UnmarshalJSON(&v)
 	return v, err
 }
 
 // UnmarshalJSON unmarshal Response Body
 func (resp *Response) UnmarshalJSON(data interface{}) error {
-	b, err := resp.Body()
+	b, err := resp.Content()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	return json.Unmarshal(b, data)
 }

@@ -1,0 +1,9 @@
+hash: c7d157a70cc5c51c0ab5debfe3851615a9605c5a51de74c6533e2117c8aba68c
+updated: 2018-02-26T07:37:42.466142458Z
+imports:
+- name: golang.org/x/net
+  version: c4c3ea71919de159c9e246d7be66deb7f0a39a58
+  subpackages:
+  - proxy
+  - publicsuffix
+testImports: []

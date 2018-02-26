@@ -2,6 +2,7 @@ package curl
 
 import (
 	"encoding/base64"
+	"fmt"
 )
 
 type authorization interface {
@@ -18,7 +19,7 @@ type TokenAuth struct {
 }
 
 func (a *BasicAuth) AuthorizationHeader() string {
-	auth := a.Username + ":" + b.Password
+	auth := a.Username + ":" + a.Password
 	return "Basic " + base64.StdEncoding.EncodeToString([]byte(auth))
 }
 

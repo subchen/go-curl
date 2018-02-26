@@ -1,8 +1,8 @@
 package curl
 
 import (
-	"net/http"
 	"errors"
+	"net/http"
 )
 
 // DefaultRedirectLimit define max redirect counts

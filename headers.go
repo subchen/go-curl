@@ -13,9 +13,8 @@ var DefaultHeaders = map[string]string{
 	"User-Agent":      DefaultUserAgent,
 }
 
-
-const (	
-	DefaultPayloadContentType = "application/octoc-streams"	
+const (
+	DefaultPayloadContentType = "application/octoc-streams"
 	DefaultJsonContentType    = "application/json; charset=utf-8"
 	DefaultFormContentType    = "application/x-www-form-urlencoded; charset=utf-8"
 )

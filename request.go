@@ -1,33 +1,33 @@
 package curl
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"io"
+	"crypto/tls"
+	"net"
 	"net/http"
-	"net/url"
-	"os"
 	"strings"
 	"time"
 )
 
+var (
+	DefaultRequestTimeout      = 30 * time.Second
+	DefaultDailTimeout         = 30 * time.Second
+	DefaultTLSHandshakeTimeout = 30 * time.Second
+	DefaultInsecureSkipVerify  = false
+)
+
 type Request struct {
-	Client              *http.Client
-	DialTimeout         time.Duration
-	DialKeepAlive       time.Duration
-	TLSHandshakeTimeout time.Duration
-	RequestTimeout      time.Duration
-	InsecureSkipVerify  bool
-	
+	Client             *http.Client
+	Transport          *http.Transport
+	InsecureSkipVerify bool
+
 	Method           string
 	URL              string
-	QueryString      interface{} // *url.Values, map[string]string, map[string][]string
+	QueryString      interface{} // url.Values, map[string]string, map[string][]string
 	Headers          map[string]string
 	Cookies          map[string]string
 	Body             interface{} // io.Reader, string
 	JSON             interface{} // any
-	Form             interface{} // *url.Values, map[string]string, map[string][]string
+	Form             interface{} // url.Values, map[string]string, map[string][]string
 	Files            []UploadFile
 	Auth             interface{} // authorization(BasicAuth, TokenAuth, ...), string
 	ProxyURL         string      // http(s)://..., sock5://...
@@ -36,14 +36,11 @@ type Request struct {
 
 func NewRequest() *Request {
 	return &Request{
-		Method:  "GET",
+		Method: "GET",
 	}
 }
 
 func (r *Request) Do() (*Response, error) {
-	if r.Client == nil {
-		r.Client = r.newClient()
-	}
 	if r.Method == "" {
 		r.Method = "GET"
 	}
@@ -58,30 +55,39 @@ func (r *Request) Do() (*Response, error) {
 		return nil, err
 	}
 
+	r.newClient()
+	r.applyProxy()
+
 	r.applyAuth()
 	r.applyHeaders(req, contentType)
 	r.applyCookies(req)
-	r.applyProxy(req)
 
-	resp, err = r.Client.Do(req)
+	resp, err := r.Client.Do(req)
 	if err != nil {
 		return nil, err
 	}
-	return &Response{resp}, nil
+	return &Response{resp, nil}, nil
 }
 
-func (r *Request) newClient() *http.Client {
-	return &http.Client{
-		Timeout:   r.RequestTimeout,
-		Transport: &http.Transport{
+func (r *Request) newClient() {
+	if r.Transport == nil {
+		r.Transport = &http.Transport{
 			Dial: (&net.Dialer{
-				Timeout:   r.DialTimeout,
-				KeepAlive: r.DialKeepAlive,
+				Timeout: DefaultDailTimeout,
 			}).Dial,
-			TLSHandshakeTimeout: r.TLSHandshakeTimeout,
-			TLSClientConfig:     &tls.Config{InsecureSkipVerify: r.InsecureSkipVerify}
-		},
-	}	
+			TLSHandshakeTimeout: DefaultTLSHandshakeTimeout,
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: DefaultInsecureSkipVerify,
+			},
+		}
+	}
+
+	if r.Client == nil {
+		r.Client = &http.Client{
+			Timeout:   DefaultRequestTimeout,
+			Transport: r.Transport,
+		}
+	}
 }
 
 func (r *Request) newURL() string {
@@ -90,7 +96,7 @@ func (r *Request) newURL() string {
 	}
 
 	qs := newURLValues(r.QueryString)
-	if strings.Contains(u, "?") {
+	if strings.Contains(r.URL, "?") {
 		return r.URL + "&" + qs.Encode()
 	}
 	return r.URL + "?" + qs.Encode()
@@ -119,13 +125,13 @@ func (r *Request) SetJSON(json interface{}) *Request {
 func (r *Request) AddFile(field, filename string) *Request {
 	r.Files = append(r.Files, UploadFile{
 		Fieldname: field,
-		Filename: filename,
+		Filename:  filename,
 	})
 	return r
 }
 
 func (r *Request) AddHeader(name, value string) *Request {
-	if r.Headers = nil {
+	if r.Headers == nil {
 		r.Headers = make(map[string]string)
 	}
 	r.Headers[name] = value
@@ -133,7 +139,7 @@ func (r *Request) AddHeader(name, value string) *Request {
 }
 
 func (r *Request) AddCookie(name, value string) *Request {
-	if r.Cookies = nil {
+	if r.Cookies == nil {
 		r.Cookies = make(map[string]string)
 	}
 	r.Cookies[name] = value

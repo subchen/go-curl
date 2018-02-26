@@ -1,9 +1,9 @@
 package curl
 
 import (
-	"net"
 	"net/http"
-	
+	"net/http/cookiejar"
+
 	"golang.org/x/net/publicsuffix"
 )
 
@@ -20,7 +20,7 @@ func (r *Request) applyCookies(req *http.Request) {
 	jar.SetCookies(req.URL, cookies)
 }
 
-func cookieJar(c *http.Client) {
+func cookieJar(c *http.Client) http.CookieJar {
 	if c.Jar == nil {
 		options := cookiejar.Options{
 			PublicSuffixList: publicsuffix.List,
