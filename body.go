@@ -96,6 +96,8 @@ func newURLValues(value interface{}) *url.Values {
 	switch v := value.(type) {
 	case *url.Values:
 		return v
+	case url.Values:
+		return &v
 	case map[string]string:
 		vals := new(url.Values)
 		for k, v := range v {
