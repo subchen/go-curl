@@ -16,9 +16,8 @@ var (
 )
 
 type Request struct {
-	Client             *http.Client
-	Transport          *http.Transport
-	InsecureSkipVerify bool
+	Client    *http.Client
+	Transport *http.Transport
 
 	Method           string
 	URL              string
