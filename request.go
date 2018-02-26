@@ -59,8 +59,9 @@ func (r *Request) Do() (*Response, error) {
 	}
 
 	r.applyAuth()
-	r.applyCookies(req)
 	r.applyHeaders(req, contentType)
+	r.applyCookies(req)
+	r.applyProxy(req)
 
 	resp, err = r.Client.Do(req)
 	if err != nil {
