@@ -36,7 +36,7 @@ type Request struct {
 
 func NewRequest() *Request {
 	return &Request{
-		Method:  "GET"
+		Method:  "GET",
 	}
 }
 
