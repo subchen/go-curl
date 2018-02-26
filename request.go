@@ -28,7 +28,7 @@ type Request struct {
 	Body             interface{} // io.Reader, string
 	JSON             interface{} // any
 	Form             interface{} // *url.Values, map[string]string, map[string][]string
-	Files            []File
+	Files            []UploadFile
 	Auth             interface{} // authorization(BasicAuth, TokenAuth, ...), string
 	ProxyURL         string      // http(s)://..., sock5://...
 	RedirectDisabled bool
@@ -117,7 +117,7 @@ func (r *Request) SetJSON(json interface{}) *Request {
 }
 
 func (r *Request) AddFile(field, filename string) *Request {
-	r.Files = append(r.Files, File{
+	r.Files = append(r.Files, UploadFile{
 		Fieldname: field,
 		Filename: filename,
 	})
