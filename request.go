@@ -30,8 +30,7 @@ type Request struct {
 func NewRequest() *Request {
 	return &Request{
 		Client:  new(http.Client),
-		Method:  "GET",
-		Headers: map[string]string{},
+		Method:  "GET"
 	}
 }
 
@@ -76,7 +75,7 @@ func (r *Request) newURL() string {
 	return r.URL + "?" + qs.Encode()
 }
 
-func (r *Request) SetQuery(qs interface{}) *Request {
+func (r *Request) SetQueryString(qs interface{}) *Request {
 	r.QueryString = qs
 	return r
 }
@@ -181,7 +180,7 @@ func (r *Request) Reset() *Request {
 	r.Method = "GET"
 	r.URL = ""
 	r.QueryString = nil
-	r.Headers = map[string]string{}
+	r.Headers = nil
 	r.Cookies = nil
 	r.Body = nil
 	r.JSON = nil
