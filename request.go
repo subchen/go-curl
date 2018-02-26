@@ -9,10 +9,17 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 )
 
 type Request struct {
-	Client           *http.Client
+	Client              *http.Client
+	DialTimeout         time.Duration
+	DialKeepAlive       time.Duration
+	TLSHandshakeTimeout time.Duration
+	RequestTimeout      time.Duration
+	InsecureSkipVerify  bool
+	
 	Method           string
 	URL              string
 	QueryString      interface{} // *url.Values, map[string]string, map[string][]string
@@ -29,14 +36,13 @@ type Request struct {
 
 func NewRequest() *Request {
 	return &Request{
-		Client:  new(http.Client),
 		Method:  "GET"
 	}
 }
 
 func (r *Request) Do() (*Response, error) {
 	if r.Client == nil {
-		r.Client = new(http.Client)
+		r.Client = r.newClient()
 	}
 	if r.Method == "" {
 		r.Method = "GET"
@@ -61,6 +67,20 @@ func (r *Request) Do() (*Response, error) {
 		return nil, err
 	}
 	return &Response{resp}, nil
+}
+
+func (r *Request) newClient() *http.Client {
+	return &http.Client{
+		Timeout:   r.RequestTimeout,
+		Transport: &http.Transport{
+			Dial: (&net.Dialer{
+				Timeout:   r.DialTimeout,
+				KeepAlive: r.DialKeepAlive,
+			}).Dial,
+			TLSHandshakeTimeout: r.TLSHandshakeTimeout,
+			TLSClientConfig:     &tls.Config{InsecureSkipVerify: r.InsecureSkipVerify}
+		},
+	}	
 }
 
 func (r *Request) newURL() string {
