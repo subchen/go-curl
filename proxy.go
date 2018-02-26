@@ -10,11 +10,11 @@ import (
 )
 
 func (r *Request) applyProxy() (err error) {
-	if r.Proxy == "" {
+	if r.ProxyURL == "" {
 		return nil
 	}
 
-	u, err := url.Parse(r.Proxy)
+	u, err := url.Parse(r.ProxyURL)
 	if err != nil {
 		return err
 	}
