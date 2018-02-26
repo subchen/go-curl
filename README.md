@@ -29,7 +29,7 @@ fmt.Println(resp.Text())
 ```go
 user := newUser()
 req := curl.NewRequest()
-resp, err := req.SetJSON(user).Post("http://example.com/api/users")
+resp, err := req.SetBasicAuth("admin", "passwd").SetJSON(user).Post("http://example.com/api/users")
 if err != nil {
 	log.Fatalln("Unable to make request: ", err)
 }
