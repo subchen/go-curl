@@ -208,7 +208,5 @@ func (r *Request) Reset() *Request {
 	r.Form = nil
 	r.Files = nil
 	r.Auth = nil
-	r.ProxyURL = ""
-	r.RedirectDisabled = false
 	return r
 }
