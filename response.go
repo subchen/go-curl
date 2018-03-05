@@ -64,7 +64,7 @@ func (resp *Response) OK() bool {
 // JSON return Response Body as map[string]interface{}
 func (resp *Response) JSON() (map[string]interface{}, error) {
 	v := make(map[string]interface{})
-	err := resp.UnmarshalJSON(&v)
+	err := resp.JSONUnmarshal(&v)
 	return v, err
 }
 
