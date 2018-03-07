@@ -5,8 +5,8 @@ import (
 	"fmt"
 )
 
-type authorization interface {
-	AuthorizationHeader() string
+type authenticator interface {
+	RequestHeaderValue() string
 }
 
 type BasicAuth struct {
@@ -18,12 +18,12 @@ type TokenAuth struct {
 	Token string
 }
 
-func (a *BasicAuth) AuthorizationHeader() string {
+func (a *BasicAuth) RequestHeaderValue() string {
 	auth := a.Username + ":" + a.Password
 	return "Basic " + base64.StdEncoding.EncodeToString([]byte(auth))
 }
 
-func (a *TokenAuth) AuthorizationHeader() string {
+func (a *TokenAuth) RequestHeaderValue() string {
 	return "token " + a.Token
 }
 
@@ -33,8 +33,8 @@ func (r *Request) applyAuth() {
 	}
 
 	switch v := r.Auth.(type) {
-	case authorization:
-		r.Headers["Authorization"] = v.AuthorizationHeader()
+	case authenticator:
+		r.Headers["Authorization"] = v.RequestHeaderValue()
 	case string:
 		r.Headers["Authorization"] = v
 	default:
