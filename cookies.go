@@ -7,7 +7,7 @@ import (
 	"golang.org/x/net/publicsuffix"
 )
 
-func (r *Request) applyCookies(req *http.Request) {
+func applyCookies(req *http.Request, r *Request) {
 	if r.Cookies == nil {
 		return
 	}

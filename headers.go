@@ -13,26 +13,27 @@ var DefaultHeaders = map[string]string{
 	"User-Agent":      DefaultUserAgent,
 }
 
-const (
-	DefaultPayloadContentType = "application/octoc-streams"
-	DefaultJsonContentType    = "application/json; charset=utf-8"
-	DefaultFormContentType    = "application/x-www-form-urlencoded; charset=utf-8"
-)
+func applyHeaders(req *http.Request, r *Request, contentType string) {
+	// apply contentType
+	if contentType != "" {
+		req.Header.Set("Content-Type", contentType)
+	}
 
-func (r *Request) applyHeaders(req *http.Request, contentType string) {
 	// apply custom Headers
 	for k, v := range r.Headers {
 		req.Header.Set(k, v)
 	}
 
-	// apply contentType
-	if _, ok := r.Headers["Content-Type"]; !ok {
-		req.Header.Set("Content-Type", contentType)
+	// apply custom global Headers
+	for k, v := range r.GlobalsHeaders {
+		if _, ok := req.Header[k]; !ok {
+			req.Header.Set(k, v)
+		}
 	}
 
 	// apply default headers
 	for k, v := range DefaultHeaders {
-		if _, ok := r.Headers[k]; !ok {
+		if _, ok := req.Header[k]; !ok {
 			req.Header.Set(k, v)
 		}
 	}

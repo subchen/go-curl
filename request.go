@@ -1,65 +1,43 @@
 package curl
 
 import (
-	"crypto/tls"
-	"net"
 	"net/http"
 	"strings"
-	"time"
-)
-
-var (
-	DefaultRequestTimeout      = 30 * time.Second
-	DefaultDailTimeout         = 30 * time.Second
-	DefaultTLSHandshakeTimeout = 30 * time.Second
-	DefaultInsecureSkipVerify  = false
 )
 
 type Request struct {
-	Client    *http.Client
-	Transport *http.Transport
-
-	Method           string
-	URL              string
-	QueryString      interface{} // url.Values, map[string]string, map[string][]string
-	Headers          map[string]string
-	Cookies          map[string]string
-	Body             interface{} // io.Reader, string
-	JSON             interface{} // any
-	Form             interface{} // url.Values, map[string]string, map[string][]string
-	Files            []UploadFile
-	Auth             interface{} // authorization(BasicAuth, TokenAuth, ...), string
-	ProxyURL         string      // http(s)://..., sock5://...
-	RedirectDisabled bool
+	Client        *http.Client
+	GlobalHeaders map[string]string
+	Headers       map[string]string
+	Cookies       map[string]string
+	Auth          interface{}
 }
 
-func NewRequest() *Request {
+func NewRequest(client *http.Client) *Request {
 	return &Request{
-		Method: "GET",
+		Client: client,
 	}
 }
 
-func (r *Request) Do() (*Response, error) {
-	if r.Method == "" {
-		r.Method = "GET"
+func (r *Request) Call(method string, url string, payload *Payload) (*Response, error) {
+	if payload == nil {
+		payload = emptyPayload
 	}
 
-	body, contentType, err := r.newBody()
+	defer r.reset(payload)
+
+	req, err := http.NewRequest(method, url, payload.reader)
 	if err != nil {
 		return nil, err
 	}
 
-	req, err := http.NewRequest(r.Method, r.newURL(), body)
-	if err != nil {
-		return nil, err
+	if r.Client == nil {
+		r.Client = new(http.Client)
 	}
 
-	r.newClient()
-	r.applyProxy()
-
-	r.applyAuth()
-	r.applyHeaders(req, contentType)
-	r.applyCookies(req)
+	applyAuth(r)
+	applyHeaders(req, r, payload.contentType)
+	applyCookies(req, r)
 
 	resp, err := r.Client.Do(req)
 	if err != nil {
@@ -68,68 +46,35 @@ func (r *Request) Do() (*Response, error) {
 	return &Response{resp, nil}, nil
 }
 
-func (r *Request) newClient() {
-	if r.Transport == nil {
-		r.Transport = &http.Transport{
-			Dial: (&net.Dialer{
-				Timeout: DefaultDailTimeout,
-			}).Dial,
-			TLSHandshakeTimeout: DefaultTLSHandshakeTimeout,
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: DefaultInsecureSkipVerify,
-			},
-		}
-	}
-
-	if r.Client == nil {
-		r.Client = &http.Client{
-			Timeout:   DefaultRequestTimeout,
-			Transport: r.Transport,
-		}
-	}
+func (r *Request) Get(url string) (*Response, error) {
+	return r.Call("GET", url, nil)
 }
 
-func (r *Request) newURL() string {
-	if r.QueryString == nil {
-		return r.URL
-	}
-
-	qs := newURLValues(r.QueryString)
-	if strings.Contains(r.URL, "?") {
-		return r.URL + "&" + qs.Encode()
-	}
-	return r.URL + "?" + qs.Encode()
+func (r *Request) Post(url string, payload *payload) (*Response, error) {
+	return r.Call("POST", url, nil)
 }
 
-func (r *Request) SetQueryString(qs interface{}) *Request {
-	r.QueryString = qs
-	return r
+func (r *Request) Put(url string, payload *payload) (*Response, error) {
+	return r.Call("PUT", url, nil)
 }
 
-func (r *Request) SetBody(body interface{}) *Request {
-	r.Body = body
-	return r
+func (r *Request) Patch(url string, payload *payload) (*Response, error) {
+	return r.Call("PATCH", url, nil)
 }
 
-func (r *Request) SetForm(form interface{}) *Request {
-	r.Form = form
-	return r
+func (r *Request) Delete(url string) (*Response, error) {
+	return r.Call("DELETE", url, nil)
 }
 
-func (r *Request) SetJSON(json interface{}) *Request {
-	r.JSON = json
-	return r
+func (r *Request) Head(url string) (*Response, error) {
+	return r.Call("HEAD", url, nil)
 }
 
-func (r *Request) AddFile(field, filename string) *Request {
-	r.Files = append(r.Files, UploadFile{
-		Fieldname: field,
-		Filename:  filename,
-	})
-	return r
+func (r *Request) Options(url string) (*Response, error) {
+	return r.Call("OPTIONS", url, nil)
 }
 
-func (r *Request) AddHeader(name, value string) *Request {
+func (r *Request) SetHeader(name, value string) *Request {
 	if r.Headers == nil {
 		r.Headers = make(map[string]string)
 	}
@@ -137,7 +82,7 @@ func (r *Request) AddHeader(name, value string) *Request {
 	return r
 }
 
-func (r *Request) AddCookie(name, value string) *Request {
+func (r *Request) SetCookie(name, value string) *Request {
 	if r.Cookies == nil {
 		r.Cookies = make(map[string]string)
 	}
@@ -155,63 +100,23 @@ func (r *Request) SetTokenAuth(token string) *Request {
 	return r
 }
 
-func (r *Request) SetProxyURL(url string) *Request {
-	r.ProxyURL = url
-	return r
-}
-
-func (r *Request) Get(url string) (*Response, error) {
-	r.Method = "GET"
-	r.URL = url
-	return r.Do()
-}
-
-func (r *Request) Post(url string) (*Response, error) {
-	r.Method = "POST"
-	r.URL = url
-	return r.Do()
-}
-
-func (r *Request) Put(url string) (*Response, error) {
-	r.Method = "PUT"
-	r.URL = url
-	return r.Do()
-}
-
-func (r *Request) Patch(url string) (*Response, error) {
-	r.Method = "PATCH"
-	r.URL = url
-	return r.Do()
-}
-
-func (r *Request) Delete(url string) (*Response, error) {
-	r.Method = "DELETE"
-	r.URL = url
-	return r.Do()
-}
-
-func (r *Request) Head(url string) (*Response, error) {
-	r.Method = "HEAD"
-	r.URL = url
-	return r.Do()
-}
-
-func (r *Request) Options(url string) (*Response, error) {
-	r.Method = "OPTIONS"
-	r.URL = url
-	return r.Do()
-}
-
-func (r *Request) Reset() *Request {
-	r.Method = "GET"
-	r.URL = ""
-	r.QueryString = nil
+func (r *Request) reset(payload *Payload) {
 	r.Headers = nil
 	r.Cookies = nil
-	r.Body = nil
-	r.JSON = nil
-	r.Form = nil
-	r.Files = nil
-	r.Auth = nil
-	return r
+
+	if payload.closer != nil {
+		payload.closer.Close()
+	}
+}
+
+func NewURL(u string, query interface{}) string {
+	if query == nil {
+		return u
+	}
+
+	qs := newURLValues(query)
+	if strings.Contains(u, "?") {
+		return u + "&" + qs.Encode()
+	}
+	return u + "?" + qs.Encode()
 }

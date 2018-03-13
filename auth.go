@@ -6,7 +6,7 @@ import (
 )
 
 type authenticator interface {
-	RequestHeaderValue() string
+	HeaderValue() string
 }
 
 type BasicAuth struct {
@@ -18,23 +18,27 @@ type TokenAuth struct {
 	Token string
 }
 
-func (a *BasicAuth) RequestHeaderValue() string {
+func (a *BasicAuth) HeaderValue() string {
 	auth := a.Username + ":" + a.Password
 	return "Basic " + base64.StdEncoding.EncodeToString([]byte(auth))
 }
 
-func (a *TokenAuth) RequestHeaderValue() string {
+func (a *TokenAuth) HeaderValue() string {
 	return "token " + a.Token
 }
 
-func (r *Request) applyAuth() {
+func applyAuth(r *Request) {
 	if r.Auth == nil {
 		return
 	}
 
+	if r.Headers == nil {
+		r.Headers = make(map[string]string)
+	}
+
 	switch v := r.Auth.(type) {
 	case authenticator:
-		r.Headers["Authorization"] = v.RequestHeaderValue()
+		r.Headers["Authorization"] = v.HeaderValue()
 	case string:
 		r.Headers["Authorization"] = v
 	default:
