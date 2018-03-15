@@ -72,7 +72,15 @@ func (r *Request) Options(url string) (*Response, error) {
 	return r.Call("OPTIONS", url, nil)
 }
 
-func (r *Request) SetHeader(name, value string) *Request {
+func (r *Request) WithGlobalHeader(name, value string) *Request {
+	if r.GlobalHeaders == nil {
+		r.GlobalHeaders = make(map[string]string)
+	}
+	r.GlobalHeaders[name] = value
+	return r
+}
+
+func (r *Request) WithHeader(name, value string) *Request {
 	if r.Headers == nil {
 		r.Headers = make(map[string]string)
 	}
@@ -80,7 +88,7 @@ func (r *Request) SetHeader(name, value string) *Request {
 	return r
 }
 
-func (r *Request) SetCookie(name, value string) *Request {
+func (r *Request) WithCookie(name, value string) *Request {
 	if r.Cookies == nil {
 		r.Cookies = make(map[string]string)
 	}
@@ -88,12 +96,12 @@ func (r *Request) SetCookie(name, value string) *Request {
 	return r
 }
 
-func (r *Request) SetBasicAuth(name, passwd string) *Request {
+func (r *Request) WithBasicAuth(name, passwd string) *Request {
 	r.Auth = &BasicAuth{name, passwd}
 	return r
 }
 
-func (r *Request) SetTokenAuth(token string) *Request {
+func (r *Request) WithTokenAuth(token string) *Request {
 	r.Auth = &TokenAuth{token}
 	return r
 }
