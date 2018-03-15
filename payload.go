@@ -91,12 +91,15 @@ func NewFilePayload(filename string) (*Payload, error) {
 		return nil, err
 	}
 
-	ext := filepath.Ext(filename)
+	contentType := mime.TypeByExtension(filepath.Ext(filename))
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
 
 	return &Payload{
 		reader:      f,
 		closer:      f,
-		contentType: mime.TypeByExtension(ext),
+		contentType: contentType,
 	}, nil
 }
 
