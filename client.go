@@ -77,6 +77,6 @@ func setProxyTransport(transport *http.Transport, proxyURL string) error {
 	return nil
 }
 
-function disableRedirect(req *Request, via []*Request) error {
+function disableRedirect(req *http.Request, via []*http.Request) error {
 	return http.ErrUseLastResponse	
 }
