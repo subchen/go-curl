@@ -5,15 +5,16 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"time"
 
 	"golang.org/x/net/proxy"
 )
 
 type ConnectionOption struct {
-	RequestTimeout      time.Durtion
-	DialTimeout         time.Durtion
-	DialKeepAlive       time.Durtion
-	TLSHandshakeTimeout time.Durtion
+	RequestTimeout      time.Duration
+	DialTimeout         time.Duration
+	DialKeepAlive       time.Duration
+	TLSHandshakeTimeout time.Duration
 	InsecureSkipVerify  bool
 	ProxyURL            string
 	DisableRedirect     bool
@@ -26,7 +27,7 @@ func NewClient(option *ConnectionOption) (*http.Client, error) {
 
 	transport := newTransport(option)
 	if option.ProxyURL != "" {
-		err := setProxyTransport(transport, option.proxyURL)
+		err := setProxyTransport(transport, option.ProxyURL)
 		if err != nil {
 			return nil, err
 		}
@@ -36,7 +37,7 @@ func NewClient(option *ConnectionOption) (*http.Client, error) {
 		Timeout:   option.RequestTimeout,
 		Transport: transport,
 	}
-	
+
 	if option.DisableRedirect {
 		client.CheckRedirect = disableRedirect
 	}
@@ -65,7 +66,7 @@ func setProxyTransport(transport *http.Transport, proxyURL string) error {
 
 	switch u.Scheme {
 	case "http", "https":
-		transport.ProxyURL = http.ProxyURL(u)
+		transport.Proxy = http.ProxyURL(u)
 	case "socks5":
 		dialer, err := proxy.FromURL(u, proxy.Direct)
 		if err != nil {
@@ -77,6 +78,6 @@ func setProxyTransport(transport *http.Transport, proxyURL string) error {
 	return nil
 }
 
-function disableRedirect(req *http.Request, via []*http.Request) error {
-	return http.ErrUseLastResponse	
+func disableRedirect(req *http.Request, via []*http.Request) error {
+	return http.ErrUseLastResponse
 }

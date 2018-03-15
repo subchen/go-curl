@@ -25,7 +25,7 @@ func applyHeaders(req *http.Request, r *Request, contentType string) {
 	}
 
 	// apply custom global Headers
-	for k, v := range r.GlobalsHeaders {
+	for k, v := range r.GlobalHeaders {
 		if _, ok := req.Header[k]; !ok {
 			req.Header.Set(k, v)
 		}

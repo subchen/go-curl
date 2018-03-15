@@ -2,13 +2,14 @@ package curl
 
 import (
 	"bytes"
-	"file/filepath"
+	"encoding/json"
 	"fmt"
 	"io"
 	"mime"
 	"mime/multipart"
 	"net/url"
 	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 )
@@ -49,18 +50,18 @@ func newPayload(body interface{}) *Payload {
 	}
 
 	// io.reader
-	if v, ok := body.(io.Reader); ok {:
+	if v, ok := body.(io.Reader); ok {
 		return NewReaderPayload(v)
 	}
 
 	// struct
 	t := reflect.TypeOf(body)
 	if t.Kind() == reflect.Struct {
-		return NewJSONPayload(v)
+		return NewJSONPayload(&body)
 	}
 	// point to struct
-	if t.Kind() == reflect.Ptr || reflect.ValueOf(body).Elem().Kind() == reflect.Struct {
-		return NewJSONPayload(v)
+	if t.Kind() == reflect.Ptr && reflect.ValueOf(body).Elem().Kind() == reflect.Struct {
+		return NewJSONPayload(body)
 	}
 
 	panic(fmt.Errorf("unsupported payload type: %T", body))
@@ -99,7 +100,7 @@ func NewFilePayload(filename string) *Payload {
 	}
 }
 
-func NewJSONPayload(json interface{}) *Payload {
+func NewJSONPayload(obj interface{}) *Payload {
 	body, err := json.Marshal(obj)
 	if err != nil {
 		return nil
@@ -118,7 +119,7 @@ func NewFormPayload(form interface{}) *Payload {
 	}
 }
 
-func NewMultipartPayload(files []UploadFile, form interface{}) *Payload {
+func NewMultipartPayload(files []UploadFile, form interface{}) (*Payload, error) {
 	bodyBuffer := new(bytes.Buffer)
 	bodyWriter := multipart.NewWriter(bodyBuffer)
 	defer bodyWriter.Close()
@@ -126,18 +127,18 @@ func NewMultipartPayload(files []UploadFile, form interface{}) *Payload {
 	for _, file := range files {
 		fileWriter, err := bodyWriter.CreateFormFile(file.Fieldname, file.Filename)
 		if err != nil {
-			return nil, "", err
+			return nil, err
 		}
 
 		f, err := os.Open(file.Filename)
 		if err != nil {
-			return nil, "", err
+			return nil, err
 		}
 		defer f.Close()
 
 		_, err = io.Copy(fileWriter, f)
 		if err != nil {
-			return nil, "", err
+			return nil, err
 		}
 	}
 
@@ -152,7 +153,7 @@ func NewMultipartPayload(files []UploadFile, form interface{}) *Payload {
 	return &Payload{
 		reader:      bodyBuffer,
 		contentType: bodyWriter.FormDataContentType(),
-	}
+	}, nil
 }
 
 func newValues(value interface{}) url.Values {
