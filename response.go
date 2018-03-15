@@ -70,7 +70,7 @@ func (resp *Response) JSON() (interface{}, error) {
 
 // JSONUnmarshal unmarshal Response Body
 func (resp *Response) JSONUnmarshal(data interface{}) error {
-	b, err := resp.Content()
+	b, err := resp.Bytes()
 	if err != nil {
 		return err
 	}
