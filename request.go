@@ -20,7 +20,10 @@ func NewRequest(client *http.Client) *Request {
 }
 
 func (r *Request) Call(method string, url string, body interface{}) (*Response, error) {
-	payload := newPayload(body)
+	payload, err := newPayload(body)
+	if err != nil {
+		return nil, err
+	}
 
 	defer r.reset(payload)
 

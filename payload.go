@@ -27,31 +27,31 @@ type UploadFile struct {
 
 var emptyPayload = new(Payload)
 
-func newPayload(body interface{}) *Payload {
+func newPayload(body interface{}) (*Payload, error) {
 	if body == nil {
-		return emptyPayload
+		return emptyPayload, nil
 	}
 
 	switch v := body.(type) {
 	case *Payload:
-		return v
+		return v, nil
 	case Payload:
-		return &v
+		return &v, nil
 	case string:
-		return NewStringPayload(v)
+		return NewStringPayload(v), nil
 	case []byte:
-		return NewBytesPayload(v)
+		return NewBytesPayload(v), nil
 	case map[string]string:
-		return NewFormPayload(v)
+		return NewFormPayload(v), nil
 	case map[string][]string:
-		return NewFormPayload(v)
+		return NewFormPayload(v), nil
 	case url.Values:
-		return NewFormPayload(v)
+		return NewFormPayload(v), nil
 	}
 
 	// io.reader
 	if v, ok := body.(io.Reader); ok {
-		return NewReaderPayload(v)
+		return NewReaderPayload(v), nil
 	}
 
 	// struct
@@ -85,10 +85,10 @@ func NewReaderPayload(reader io.Reader) *Payload {
 	}
 }
 
-func NewFilePayload(filename string) *Payload {
+func NewFilePayload(filename string) (*Payload, error) {
 	f, err := os.Open(filename)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
 	ext := filepath.Ext(filename)
@@ -97,18 +97,18 @@ func NewFilePayload(filename string) *Payload {
 		reader:      f,
 		closer:      f,
 		contentType: mime.TypeByExtension(ext),
-	}
+	}, nil
 }
 
-func NewJSONPayload(obj interface{}) *Payload {
+func NewJSONPayload(obj interface{}) (*Payload, error) {
 	body, err := json.Marshal(obj)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 	return &Payload{
 		reader:      bytes.NewReader(body),
 		contentType: "application/json; charset=utf-8",
-	}
+	}, nil
 }
 
 func NewFormPayload(form interface{}) *Payload {
