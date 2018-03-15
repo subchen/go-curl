@@ -26,12 +26,12 @@ type UploadFile struct {
 
 var emptyPayload = new(Payload)
 
-func NewPlayload(body interface{}) *Payload {
+func newPayload(body interface{}) *Payload {
 	if body == nil {
 		return emptyPayload
 	}
 	switch v := body.(type) {
-	case *Playload:
+	case *Payload:
 		return v
 	case string:
 		return NewStringPayload(v)
