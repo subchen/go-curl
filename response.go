@@ -13,13 +13,13 @@ import (
 // Response ...
 type Response struct {
 	*http.Response
-	body []byte
+	bytes []byte
 }
 
 // Content return Response Body as []byte
-func (resp *Response) Content() ([]byte, error) {
-	if resp.body != nil {
-		return resp.body, nil
+func (resp *Response) Bytes() ([]byte, error) {
+	if resp.bytes != nil {
+		return resp.bytes, nil
 	}
 
 	var reader io.ReadCloser
@@ -43,13 +43,13 @@ func (resp *Response) Content() ([]byte, error) {
 		return nil, err
 	}
 
-	resp.body = b
+	resp.bytes = b
 	return b, nil
 }
 
 // Text return Response Body as string
 func (resp *Response) Text() (string, error) {
-	b, err := resp.Content()
+	b, err := resp.Bytes()
 	if err != nil {
 		return "", nil
 	}
@@ -61,9 +61,9 @@ func (resp *Response) OK() bool {
 	return resp.StatusCode < 400
 }
 
-// JSON return Response Body as map[string]interface{}
-func (resp *Response) JSON() (map[string]interface{}, error) {
-	v := make(map[string]interface{})
+// JSON return Response Body as JSON interface{}
+func (resp *Response) JSON() (interface{}, error) {
+	var v interface{}
 	err := resp.JSONUnmarshal(&v)
 	return v, err
 }
