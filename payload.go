@@ -25,6 +25,38 @@ type UploadFile struct {
 
 var emptyPayload = new(Payload)
 
+func NewPlayload(body interface{}) *Payload {
+	if body == nil {
+		return emptyPayload
+	}
+	switch v := body.(type) {
+	case *Playload:
+		return v
+	case string:
+		return NewStringPayload(v)
+	case []byte:
+		return NewBytesPayload(v)
+	case io.Reader:
+		return NewReaderPayload(v)
+	case map[string]string:
+		return NewFormPayload(v)
+	case map[string][]string:
+		return NewFormPayload(v)
+	}
+
+	// struct
+	t := reflect.TypeOf(body)
+	if t.Kind() == reflect.Struct {
+		return NewJSONPayload(v)
+	}
+	// point to struct
+	if t.Kind() == reflect.Ptr || reflect.ValueOf(body).Elem().Kind() == reflect.Struct {
+		return NewJSONPayload(v)
+	}
+	
+	panic(fmt.Errorf("unsupported payload type: %T", body))
+}
+
 func NewStringPayload(body string) *Payload {
 	return &Payload{
 		reader: strings.NewReader(body),
@@ -70,7 +102,7 @@ func NewJSONPayload(json interface{}) *Payload {
 }
 
 func NewFormPayload(form interface{}) *Payload {
-	body := newURLValues(form)
+	body := newValues(form)
 	return &Payload{
 		reader:      strings.NewReader(body.Encode()),
 		contentType: "application/x-www-form-urlencoded; charset=utf-8",
@@ -101,7 +133,7 @@ func NewMultipartPayload(files []UploadFile, form interface{}) *Payload {
 	}
 
 	if form != nil {
-		for k, vs := range newURLValues(form) {
+		for k, vs := range newValues(form) {
 			for _, v := range vs {
 				bodyWriter.WriteField(k, v)
 			}
@@ -114,7 +146,7 @@ func NewMultipartPayload(files []UploadFile, form interface{}) *Payload {
 	}
 }
 
-func newURLValues(value interface{}) url.Values {
+func newValues(value interface{}) url.Values {
 	if value == nil {
 		return nil
 	}
@@ -137,5 +169,5 @@ func newURLValues(value interface{}) url.Values {
 		}
 		return vals
 	}
-	panic(fmt.Errorf("unable to convert type %T to *url.Values", value))
+	panic(fmt.Errorf("unable to convert type %T to url.Values", value))
 }
