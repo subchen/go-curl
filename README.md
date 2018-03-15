@@ -14,10 +14,18 @@ import "github.com/subchen/go-curl"
 ### Basic request
 
 ```go
-req := curl.NewRequest()
-req.Method = "GET"
-req.URL = "http://example.com/api/users"
-resp, err := req.Do()
+req := curl.NewRequest(nil)
+
+// GET
+resp, err := req.Get("http://example.com/api/users")
+if err != nil {
+	log.Fatalln("Unable to make request: ", err)
+}
+fmt.Println(resp.Text())
+
+// POST
+user := &User{...}
+resp, err := req.Post("http://example.com/api/users", user)
 if err != nil {
 	log.Fatalln("Unable to make request: ", err)
 }
@@ -29,7 +37,7 @@ fmt.Println(resp.Text())
 ```go
 user := newUser()
 req := curl.NewRequest()
-resp, err := req.SetBasicAuth("admin", "passwd").SetJSON(user).Post("http://example.com/api/users")
+resp, err := req.WithBasicAuth("admin", "passwd").WithHeader("x-trace-id", "123").Post("http://example.com/api/users")
 if err != nil {
 	log.Fatalln("Unable to make request: ", err)
 }
