@@ -30,19 +30,27 @@ func newPayload(body interface{}) *Payload {
 	if body == nil {
 		return emptyPayload
 	}
+
 	switch v := body.(type) {
 	case *Payload:
 		return v
+	case Payload:
+		return &v
 	case string:
 		return NewStringPayload(v)
 	case []byte:
 		return NewBytesPayload(v)
-	case io.Reader:
-		return NewReaderPayload(v)
 	case map[string]string:
 		return NewFormPayload(v)
 	case map[string][]string:
 		return NewFormPayload(v)
+	case url.Values:
+		return NewFormPayload(v)
+	}
+
+	// io.reader
+	if v, ok := body.(io.Reader); ok {:
+		return NewReaderPayload(v)
 	}
 
 	// struct
@@ -54,7 +62,7 @@ func newPayload(body interface{}) *Payload {
 	if t.Kind() == reflect.Ptr || reflect.ValueOf(body).Elem().Kind() == reflect.Struct {
 		return NewJSONPayload(v)
 	}
-	
+
 	panic(fmt.Errorf("unsupported payload type: %T", body))
 }
 
