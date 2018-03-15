@@ -37,7 +37,7 @@ func (r *Request) Call(method string, url string, body interface{}) (*Response, 
 	}
 
 	applyAuth(r)
-	applyHeaders(req, r, payload.contentType)
+	applyHeaders(req, r, payload.contentType, payload.contentLength)
 	applyCookies(req, r)
 
 	resp, err := r.Client.Do(req)
@@ -52,15 +52,15 @@ func (r *Request) Get(url string) (*Response, error) {
 }
 
 func (r *Request) Post(url string, body interface{}) (*Response, error) {
-	return r.Call("POST", url, nil)
+	return r.Call("POST", url, body)
 }
 
 func (r *Request) Put(url string, body interface{}) (*Response, error) {
-	return r.Call("PUT", url, nil)
+	return r.Call("PUT", url, body)
 }
 
 func (r *Request) Patch(url string, body interface{}) (*Response, error) {
-	return r.Call("PATCH", url, nil)
+	return r.Call("PATCH", url, body)
 }
 
 func (r *Request) Delete(url string) (*Response, error) {

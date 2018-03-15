@@ -15,9 +15,10 @@ import (
 )
 
 type Payload struct {
-	reader      io.Reader
-	closer      io.Closer
-	contentType string
+	reader        io.Reader
+	closer        io.Closer
+	contentLength int64
+	contentType   string
 }
 
 type UploadFile struct {
@@ -69,13 +70,15 @@ func newPayload(body interface{}) (*Payload, error) {
 
 func NewStringPayload(body string) *Payload {
 	return &Payload{
-		reader: strings.NewReader(body),
+		reader:        strings.NewReader(body),
+		contentLength: int64(len(body)),
 	}
 }
 
 func NewBytesPayload(body []byte) *Payload {
 	return &Payload{
-		reader: bytes.NewReader(body),
+		reader:        bytes.NewReader(body),
+		contentLength: int64(len(body)),
 	}
 }
 
@@ -90,13 +93,21 @@ func NewFilePayload(filename string) (*Payload, error) {
 	if err != nil {
 		return nil, err
 	}
+	fstat, err := f.Stat()
+	if err != nil {
+		return nil, err
+	}
 
-	ext := filepath.Ext(filename)
+	contentType := mime.TypeByExtension(filepath.Ext(filename))
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
 
 	return &Payload{
-		reader:      f,
-		closer:      f,
-		contentType: mime.TypeByExtension(ext),
+		reader:        f,
+		closer:        f,
+		contentLength: fstat.Size(),
+		contentType:   contentType,
 	}, nil
 }
 
@@ -106,16 +117,18 @@ func NewJSONPayload(obj interface{}) (*Payload, error) {
 		return nil, err
 	}
 	return &Payload{
-		reader:      bytes.NewReader(body),
-		contentType: "application/json; charset=utf-8",
+		reader:        bytes.NewReader(body),
+		contentLength: int64(len(body)),
+		contentType:   "application/json; charset=utf-8",
 	}, nil
 }
 
 func NewFormPayload(form interface{}) *Payload {
-	body := newValues(form)
+	body := newValues(form).Encode()
 	return &Payload{
-		reader:      strings.NewReader(body.Encode()),
-		contentType: "application/x-www-form-urlencoded; charset=utf-8",
+		reader:        strings.NewReader(body),
+		contentLength: int64(len(body)),
+		contentType:   "application/x-www-form-urlencoded; charset=utf-8",
 	}
 }
 
@@ -151,8 +164,9 @@ func NewMultipartPayload(files []UploadFile, form interface{}) (*Payload, error)
 	}
 
 	return &Payload{
-		reader:      bodyBuffer,
-		contentType: bodyWriter.FormDataContentType(),
+		reader:        bodyBuffer,
+		contentLength: int64(bodyBuffer.Len()),
+		contentType:   bodyWriter.FormDataContentType(),
 	}, nil
 }
 

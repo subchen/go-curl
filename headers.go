@@ -13,10 +13,14 @@ var DefaultHeaders = map[string]string{
 	"User-Agent":      DefaultUserAgent,
 }
 
-func applyHeaders(req *http.Request, r *Request, contentType string) {
+func applyHeaders(req *http.Request, r *Request, contentType string, contentLength int64) {
 	// apply contentType
 	if contentType != "" {
 		req.Header.Set("Content-Type", contentType)
+	}
+	// apply contentLength
+	if contentLength > 0 {
+		req.ContentLength = contentLength
 	}
 
 	// apply custom Headers
