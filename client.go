@@ -36,6 +36,10 @@ func NewClient(option *ConnectionOption) (*http.Client, error) {
 		Timeout:   option.RequestTimeout,
 		Transport: transport,
 	}
+	
+	if option.DisableRedirect {
+		client.CheckRedirect = disableCheckRedirect
+	}
 
 	return client, nil
 }
@@ -71,4 +75,8 @@ func setProxyTransport(transport *http.Transport, proxyURL string) error {
 		transport.Dial = dialer.Dial
 	}
 	return nil
+}
+
+function disableRedirect(req *Request, via []*Request) error {
+	return http.ErrUseLastResponse	
 }
