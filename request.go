@@ -19,10 +19,8 @@ func NewRequest(client *http.Client) *Request {
 	}
 }
 
-func (r *Request) Call(method string, url string, payload *Payload) (*Response, error) {
-	if payload == nil {
-		payload = emptyPayload
-	}
+func (r *Request) Call(method string, url string, body interface{}) (*Response, error) {
+	payload := newPayload(body)
 
 	defer r.reset(payload)
 
@@ -50,15 +48,15 @@ func (r *Request) Get(url string) (*Response, error) {
 	return r.Call("GET", url, nil)
 }
 
-func (r *Request) Post(url string, payload *payload) (*Response, error) {
+func (r *Request) Post(url string, body interface{}) (*Response, error) {
 	return r.Call("POST", url, nil)
 }
 
-func (r *Request) Put(url string, payload *payload) (*Response, error) {
+func (r *Request) Put(url string, body interface{}) (*Response, error) {
 	return r.Call("PUT", url, nil)
 }
 
-func (r *Request) Patch(url string, payload *payload) (*Response, error) {
+func (r *Request) Patch(url string, body interface{}) (*Response, error) {
 	return r.Call("PATCH", url, nil)
 }
 
@@ -114,7 +112,7 @@ func NewURL(u string, query interface{}) string {
 		return u
 	}
 
-	qs := newURLValues(query)
+	qs := newValues(query)
 	if strings.Contains(u, "?") {
 		return u + "&" + qs.Encode()
 	}
