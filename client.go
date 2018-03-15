@@ -38,7 +38,7 @@ func NewClient(option *ConnectionOption) (*http.Client, error) {
 	}
 	
 	if option.DisableRedirect {
-		client.CheckRedirect = disableCheckRedirect
+		client.CheckRedirect = disableRedirect
 	}
 
 	return client, nil
